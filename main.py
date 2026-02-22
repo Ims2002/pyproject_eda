@@ -8,9 +8,28 @@ from src.viz import plot_graph
 
 def main():
     df = load_csv(RAW_PATH)
+    assert_columns(df, [
+        'App', 'Category', 'Rating', 'Reviews',
+        'Size_MB', 'Installs', 'Type', 'Price_$',
+        'Content_Rating', 'Genres',
+        'Last_Updated', 'Android_Version'
+    ])
     df = clean(df)
+    
+    assert_columns(df, [
+        'Android_Version',
+        'Last_Updated',
+        'Rating'
+    ])
+
     df = build_features(df)
-    # assert_columns(df, ['column_1', 'column_2'])
+
+    assert_columns(df, [
+        'Android_Version_Major',
+        'Last_Updated_Year',
+        'Last_Updated_Month',
+        'Rating_Group',
+    ])
 
     plot_graph(df)
 
