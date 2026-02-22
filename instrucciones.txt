@@ -46,6 +46,7 @@ Si van a usar paquetes nuevos, instálenlos y actualicen `requirements.txt` con 
 
 5) (Opcional) Hacer que Jupyter use el `.venv` como kernel:
 ```bash
+(en ocasiones vscode lo instala automáticamente)
 pip install ipykernel
 python -m ipykernel install --user --name=project_demo_venv --display-name "Python (.venv)"
 ``` 

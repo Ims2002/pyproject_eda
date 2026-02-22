@@ -1,65 +1,68 @@
-## Plantilla de README
+# Cleaning del Dataset de Aplicaciones
 
-### 1) Objetivo
-- Analizar y visualizar un dataset de demostración para entender el proceso de limpieza de datos, construcción de características y generación de visualizaciones.
+La función `clean(df: pd.DataFrame)` se encarga de **preprocesar y estandarizar el dataset** para que sea consistente y listo para análisis o visualización.  
 
-### 2) Dataset
-- Fuente: Archivo CSV de ejemplo (demo_dirty.csv)
-- Nº filas/columnas: Variable (depende del archivo cargado)
-- Variables clave: Columnas de datos numéricos y categóricos para análisis
+## Pasos del preprocesamiento
 
-### 3) Preguntas
-- Q1: ¿Cómo se distribuyen los datos después de la limpieza?
-- Q2: ¿Qué características nuevas se pueden derivar?
-- Q3: ¿Qué insights se obtienen de las visualizaciones?
-- (opcionales)
+### 1️⃣ Estandarización de categorías
+- Todas las categorías se pasan a **mayúsculas** para uniformidad.
+- Se recodifican categorías específicas según reglas del proyecto:
+  - `'LIFESTYLE' → 'HEALTH'`
+  - `'FINANCE' → 'BUSINESS'`
+  - `'TOOLS' → 'PRODUCTIVITY'`
+  - `'ENTERTAINMENT' → 'GAME'`
 
-### 4) Data issues & fixes
-- Valores faltantes → Limpieza y imputación en src/cleaning.py
-- Datos inconsistentes → Normalización y corrección
-- Formatos incorrectos → Conversión de tipos de datos
+### 2️⃣ Limpieza de la columna `Installs`
+- Se eliminan caracteres innecesarios: `+`, `,` y la palabra `'installs'`.
+- Se eliminan espacios en blanco al inicio o final.
+- Se descartan filas con valor `'unknown'`.
+- Se convierte la columna a **tipo entero (`int`)**.
 
-### 5) Pipeline
-- raw → clean → features → viz → (export opcional a `data/processed/`)
+### 3️⃣ Manejo de valores nulos
+- Se eliminan filas con valores nulos en **`Last_Updated`** (corresponden ~3% del dataset).  
+- Para **`Rating`**, los valores nulos se reemplazan por la **media de la columna**, redondeada a 1 decimal.
+- Para **`Genres`**, los valores nulos se rellenan con `'UNKNOWN'` y se convierten a mayúsculas.
+- Para **`Price_$`**, los valores nulos se rellenan con `0.0` (asumiendo que las apps son gratuitas).
 
-### 6) Hallazgos
-- Insight 1: Distribución de datos limpia (con referencia a gráfico generado)
-- Insight 2: Características derivadas mejoran el análisis
-- Insight 3: Visualizaciones revelan patrones clave
+### 4️⃣ Sincronización de `Type` y `Price_$`
+- Todas las apps con `Type == 'Free'` tienen el precio forzado a **0** para consistencia.
 
-### 7) Estructura del proyecto
-- `src/` contiene funciones reutilizables (`io`, `cleaning`, `features`, `viz`)
-- `main.py` ejecuta el pipeline end-to-end
+### 5️⃣ Conversión de tipos y creación de columnas de tiempo
+- `Last_Updated` se convierte a **datetime**.
 
-### 8) Cómo ejecutar
-- `pip install -r requirements.txt`
-- Ejecutar pipeline: `python main.py`
-- (Opcional) Abrir y ejecutar: `notebooks/eda.ipynb`
+### 6️⃣ Eliminación de columnas irrelevantes
+- Se elimina **`Size_MB`**, ya que todos los valores son iguales y no aportan información útil para el análisis.
 
-## Estructura recomendada del proyecto
+### 7️⃣ Resultado
+- El DataFrame resultante está **limpio, consistente y listo para análisis, visualización o generación de features adicionales**.
 
-Regla: el notebook **explica** y **orquesta**. El código repetible va a `src/`.
+---
 
-Estructura sugerida:
+💡 Este preprocesamiento asegura que:
 
-```
-project/
-├── main.py
-├── data/
-│   ├── raw/
-│   └── processed/
-├── notebooks/
-│   └── eda.ipynb
-├── src/
-│   ├── __init__.py
-│   ├── io.py
-│   ├── cleaning.py
-│   ├── config.py
-│   ├── features.py
-│   ├── viz.py
-│   └── utils.py
-├── README.md
-├── .gitignore
-└── requirements.txt
+- No haya inconsistencias en categorías o tipos.  
+- Las columnas numéricas estén correctamente formateadas.  
+- Los valores nulos sean tratados de forma lógica.  
+- Se puedan hacer análisis temporales sin errores de formato.
 
-```
+
+
+
+# Generación de Features del Dataset de Aplicaciones
+
+La función `build_features(df: pd.DataFrame)` crea **features derivadas** a partir del dataset limpio para facilitar análisis, agregaciones y visualizaciones.  
+
+Se aplica **después de la limpieza** (`clean(df)`), sobre un DataFrame consistente.
+
+## Features generadas
+
+### 1️⃣ Android_Version_Major
+- Extrae la versión principal de Android a partir de la columna `Android_Version`.
+- Se toma la parte antes del primer punto (`'9.0' → 9`) y se convierte a entero.
+- Útil para análisis agregados por versión principal sin preocuparse por subversiones.
+
+### 2️⃣ Last_Updated_Year y Last_Updated_Month
+- Extrae el **año** y el **mes** de la columna `Last_Updated`.
+- Permite agrupar aplicaciones por fecha de actualización de manera fácil (`df.groupby(['Last_Updated_Year', 'Last_Updated_Month'])`).
+- Facilita análisis temporales y gráficos de evolución mensual.
+
